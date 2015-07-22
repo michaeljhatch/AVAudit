@@ -8,7 +8,7 @@ Created on Tue Jun 23 15:00:07 2015
 import os
 import errno
 
-save_path='C:/Users/Michael/Desktop/test'
+save_path='test'
 
 
 
