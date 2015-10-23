@@ -1,44 +1,37 @@
-import os, hashlib
+import os, hashlib, stat, winreg
+
+# Total number of times the loop executes
+final_count = 111551
+
+#Rounding to get clean percentages
+count_percent = 1116
+
+current_count = 0
 
 # Location of md5 for each piece of malware we'll be looking for
-locations = [r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\ZeusGameover_Feb2014\ZeusGameover_Feb2014.md5",
-             r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\ZeroAccess\ZeroAccess.md5",
-             r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\Win32.Sality\Win32.Sality.md5",
-             r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\Keylogger.Ardamax\Keylogger.Ardamax.md5",
-             r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\Ransomware.Matsnu\Ransomware.Matsnu.md5",
-             r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\Rustock\Rustock.md5",
-             r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\BlackEnergy2.1\BlackEnergy2.1.md5",
-             r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\Trojan.Bladabindi\Trojan.Bladabindi.md5",
-             r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\Trojan.Regin\Trojan.Regin.md5",
-             r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\Trojan.Stabuniq\Trojan.Stabuniq.md5"]
+locations = [r"C:\Users\ACMS Tech\AppData\Roaming\AcroIEHelper Module\acroiehelper.exe",
+             r"C:\Users\ACMS Tech\AppData\Roaming\GrooveMonitor Utility\groovemonitor.exe",
+             r"C:\Users\ACMS Tech\AppData\Roaming\InstallShield Update Service Scheduler\issch.exe",
+             r"C:\Users\ACMS Tech\AppData\Roaming\Java Quick Starter\jqs.exe",
+             r"C:\Users\ACMS Tech\AppData\Roaming\SoundMAX service agent\smagent.exe",
+             r"C:\Users\ACMS Tech\AppData\Roaming\ntkrnl",
+             r"C:\Users\ACMS Tech\AppData\Local\userdata.dat",
+             r"C:\Users\ACMS Tech\AppData\Local\cmd.exe",
+             r"C:\Users\ACMS Tech\AppData\Local\googleupdaterr.exe",
+             r"C:\Program Files (x86)\BenFit14\BChelp.exe",
+             r"C:\ProgramData\bytedraft\bpvttlpxh.exe"]
 
-# location of the actual malware
-zip_locations = [r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\ZeusGameover_Feb2014\ZeusGameover_Feb2014.zip",
-                 r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\ZeroAccess\ZeroAccess.zip",
-                 r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\Win32.Sality\Win32.Sality.zip",
-                 r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\Keylogger.Ardamax\Keylogger.Ardamax.zip",
-                 r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\Ransomware.Matsnu\Ransomware.Matsnu.zip",
-                 r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\Rustock\Rustock.zip",
-                 r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\BlackEnergy2.1\BlackEnergy2.1.rar",
-                 r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\Trojan.Bladabindi\Trojan.Bladabindi.zip",
-                 r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\Trojan.Regin\Trojan.Regin.zip",
-                 r"C:\Users\ACMS Tech\Desktop\theZoo\malwares\Binaries\Trojan.Stabuniq\Trojan.Stabuniq.zip"]
+reg_keys = {'HKEY_CURRENT_USER': (r"Software\Microsoft\Windows\CurrentVersion\Run", r"Software\Stability Software", r"Software\Win7zip"),
+            'HKEY_USERS': r".DEFAULT\Software\Microsoft\Windows\CurrentVersion\Run",
+            'HKEY_LOCAL_MACHINE': r"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"}
 
 
-locations_list = [open(filename, 'r') for filename in locations]
+
 
 # Locations of files with the same md5 as mw
 paths_found = []
 
-# Actual md5 for each mw
-hashes = []
-
-#Calculates hashes
-for locs in locations_list:
-        loc_tuple = locs.read().split()
-        loc_hash = loc_tuple[0]
-        hashes.append(loc_hash)
-
+keys_found = []
 
  
 folder = 'C:\\'
@@ -49,42 +42,96 @@ print("Working...")
 for (root, dirs, files) in os.walk(folder):
         for file in files:
                 try:
+        
                         this_file = os.path.join(root, file)
-                        this_md5 = hashlib.md5()
 
-                        with open(this_file, 'rb') as FIN:
-                                this_md5.update(FIN.read())
+                        # print(this_file)
+                        
+                        if this_file in locations:
+                              print(this_file)
+                              paths_found.append(this_file)
 
-                        for x in hashes:
-                                if (this_md5.hexdigest() in hashes):
-                                        paths_found.append(this_file)
+                                        
+                # 
+                except PermissionError:
+                        print("Permission issue at %s" % this_file)
 
-                # Currently not interfering with anything we care about
-                # Add print statements if losing files
-                except (FileNotFoundError, PermissionError):
+                except (FileNotFoundError):
                         pass
+
+                percent_tracker = current_count % count_percent
+                
+                current_percent = current_count/count_percent
+        
+                if(percent_tracker == 0):
+                        print("%d percent complete" % current_percent)
+
+                current_count += 1
+
+
+hkey = list(reg_keys.items())
+
+#print(hkey)
+
+subvals = [] 
+
+keys = []
+
+# COMPLETE THIS  
+for i in hkey:
+        try:
+
+        
+                if i[0] == 'HKEY_LOCAL_MACHINE':
+                
+                        key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, i[1])
+                        subvals.append(key)
+
+                elif i[0] == 'HKEY_USERS':
+                
+                        key = winreg.OpenKey(winreg.HKEY_USERS, i[1])
+                        subvals.append(key)
+
+                elif i[0] == 'HKEY_CURRENT_USER':
+                        for index in i[1]:
+                        
+                                key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, index)
+
+                        
+                                try:
+                                        (winreg.EnumValue(key, 0))
+                                        keys_found.append(index)
+
+                                except:
+                                        continue
+
+        except:
+                continue  
+
+
+#print(keys_found)
 
 # Eliminates duplicate entries
 found_paths = list(set(paths_found))
 
-
-#if not found_paths:
-#        print("No matches")
-#else:
-#        print(found_paths)
-
-# Removes entries from known sources
-# If working, found_paths should have the locations of MW after execution
-for location in zip_locations:
-        for file in found_paths:
-                if (os.path.samefile(file, location)):
-                        found_paths.remove(file)
+found_keys = list(set(keys_found))
 
 
 
 
+##
 if not found_paths:
-        print("locations as expected")
+        print("No malicious executables")
 else:
-        print("Spacing")
         print(found_paths)
+
+if not found_keys:
+        print("Registry keys are clear")
+else:
+        print(found_keys)
+
+#print(paths_found)
+
+input("Press enter to continue")
+
+
